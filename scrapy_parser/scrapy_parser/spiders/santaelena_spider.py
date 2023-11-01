@@ -1,4 +1,5 @@
 import scrapy
+from scrapy_parser.geo_script import geo_location
 
 
 class SantaelenaSpider(scrapy.Spider):
@@ -9,12 +10,11 @@ class SantaelenaSpider(scrapy.Spider):
     ]
 
     def parse(self, response, **kwargs):
-        data_id = response.xpath(f'//section[@data-id="8a22020"]/div[1]/div/div/@data-id').getall()
+        data_id = response.xpath('//section[@data-id="8a22020"]/div[1]/div/div/@data-id').getall()
         for data in data_id:
             org_link = response.xpath(f'//div[@data-id="{data}"]//a//@href').get()
 
             yield response.follow(org_link, callback=self.parse_oragnization)
-
 
     def parse_oragnization(self, response):
 
@@ -27,24 +27,32 @@ class SantaelenaSpider(scrapy.Spider):
                     continue
                 if '\n' in name:
                     name = name.replace('\n', '')
-                data = response.xpath(f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p/text()').getall()
+                data = (
+                    response.xpath(f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p/text()').getall())
+
                 data = [i.strip() for i in data]
-                if data[2]==':' or data[2]=='Teléfono:':
+                if data[2] == ':' or data[2] == 'Teléfono:':
                     address = data[1]
-                    phones = data[3]
+                    phones = [data[3],]
                     working_hours = data[5:]
-                elif data[3]==':' or data[3]=='Teléfono:':
+                elif data[3] == ':' or data[3] == 'Teléfono:':
                     address = f'{data[2]} {data[3]}'
-                    phones = data[4]
+                    phones = [data[4],]
                     working_hours = data[6:]
                 else:
-                    address = data[2]
-                    phones = data[4]
-                    working_hours = data[6:]
+                    address = response.xpath(
+                        f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p[1]/text()').getall()[0]
+                    phones = response.xpath(
+                        f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p[2]/text()').getall()
+                    working_hours = response.xpath(
+                        f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p[3]/text()').getall()
+
+                city = response.xpath('//h2/text()').getall()[0].split(' ')[-1]
+                latlon = geo_location.lat_long_via_address(address)
                 yield {
-                    'name': name,
-                    'address': address,
-                    'latlon': [''],
+                    'name': f'Pastelería Santa Elena {name}',
+                    'address': f'{city}, {address}',
+                    'latlon': latlon,
                     'phones': phones,
                     'working_hours': working_hours,
                 }
