@@ -16,13 +16,13 @@ class DentaliaSpider(scrapy.Spider):
 
     def parse_clinics(self, response, **kwargs):
 
-        # for post in response.xpath('//div[@data-listing-id="330"]/div/@data-post-id').getall():
-        #     name = response.xpath(f'//div[@data-post-id="{post}"]//h3/text()').get()
-        #     address =
-        #     phones =
-        #     working_hours =
-        #     yield {
-        #         'name': f'dentalia'}
+        for post in response.xpath('//div[@data-listing-id="330"]/div/@data-post-id').getall():
+            name = response.xpath(f'//div[@data-post-id="{post}"]//h3/text()').get()
+            # address =
+            # phones =
+            # working_hours =
+            yield {
+                'name': f'dentalia {name}'}
         pass
 
 # Тут я уперся в стену ввиде https://ru.paste.pics/PRUD0
