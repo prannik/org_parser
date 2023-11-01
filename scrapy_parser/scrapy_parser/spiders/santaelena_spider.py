@@ -31,6 +31,7 @@ class SantaelenaSpider(scrapy.Spider):
                     response.xpath(f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p/text()').getall())
 
                 data = [i.strip() for i in data]
+
                 if data[2] == ':' or data[2] == 'Teléfono:':
                     address = data[1]
                     phones = [data[3],]
@@ -48,6 +49,10 @@ class SantaelenaSpider(scrapy.Spider):
                         f'//div[@data-id="{colum}"]//div[@class="elementor-widget-container"]/div[@class="elementor-text-editor elementor-clearfix"]/p[3]/text()').getall()
 
                 city = response.xpath('//h2/text()').getall()[0].split(' ')[-1]
+                if ':' in address:
+                    address = address.replace(':', '').strip()
+                if '#' in address:
+                    address = address.replace('#', '').strip()
                 latlon = geo_location.lat_long_via_address(address)
                 yield {
                     'name': f'Pastelería Santa Elena {name}',
